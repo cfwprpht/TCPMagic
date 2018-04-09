@@ -14,7 +14,6 @@ using System.Net.Sockets;
 using System.Text;
 using SwissKnife;
 using SwissKnife.WinForms;
-using TCPMagic;
 using Gui = TCPMagic.TCPMagic;
 using System.Threading;
 using System.Runtime.InteropServices;
@@ -37,11 +36,23 @@ namespace ps4TCP {
     }
 
     public class PS4TCP {
+        /// <summary>
+        /// A Event Handler for the PS4TCP Class.
+        /// </summary>
+        /// <param name="sender">The Sender.</param>
+        /// <param name="args">The Event Arguments.</param>
+        public delegate void PS4TCPEvent(object sender, AppEventArgs args);
+
         #region Vars
+        /// <summary>
+        /// A WriteLine Event to write a message into the gui from outside.
+        /// </summary>
+        public static event PS4TCPEvent OnWriteLineEvent;
+
         /// <summary>
         /// A Counter to display in the console for user wait.
         /// </summary>
-        private int COUNT = 0;
+        private static int COUNT = 0;
 
         /// <summary>
         /// The Port to communicate over.
@@ -51,7 +62,7 @@ namespace ps4TCP {
         /// <summary>
         /// Define to use formatting for the output or not.
         /// </summary>
-        public bool formatting = true;
+        public static bool formatting = true;
 
         /// <summary>
         /// Used to tell the server which encoding he shall use for the client.
@@ -61,52 +72,52 @@ namespace ps4TCP {
         /// <summary>
         /// Determine from the Gui instance if we shall exit the loop
         /// </summary>
-        private bool exit = false;
+        private static bool exit = false;
 
         /// <summary>
         /// Flag to jump into some specific port dumb routines.
         /// </summary>
-        public bool binData = false;
+        public static bool binData = false;
 
         /// <summary>
         /// Determine if this connection is a browser debug session so the server won't ask for reconnection and also won't print out information on each new dis and re connect.
         /// </summary>
-        public bool noConnectMsg = false;
+        public static bool noConnectMsg = false;
 
         /// <summary>
         /// Determine if we shall use a log or not.
         /// </summary>
-        public bool log = false;
+        public static bool log = false;
 
         /// <summary>
         /// Determine if this process shall be a server or a client.
         /// </summary>
-        private bool useServer = false;
+        private static bool useServer = false;
         
         /// <summary>
         /// Variable used to store the custom color for the fore ground.
         /// </summary>
-        public string foreCol;
+        public static string foreCol;
         
         /// <summary>
         /// Variable used to store the custom color for the back ground.
         /// </summary>
-        public string backCol;
+        public static string backCol;
         
         /// <summary>
         /// Variable used to store the custom color for the error.
         /// </summary>
-        public string errCol;
+        public static string errCol;
 
         /// <summary>
         /// Variable used to store the custom color for the socket string.
         /// </summary>
-        public string sockCol;
+        public static string sockCol;
 
         /// <summary>
         /// Variable used to store the custom color for the PC string.
         /// </summary>
-        public string pcCol;
+        public static string pcCol;
 
         /// <summary>
         /// A Variable for string comparison which holds a integer flag for the options.
@@ -152,7 +163,7 @@ namespace ps4TCP {
         /// <summary>
         /// Representing the position of the cursor within the text field.
         /// </summary>
-        private int cursorLeft, cursorTop;
+        private static int cursorLeft, cursorTop;
 
         /// <summary>
         /// The current directory, to resolve files and more.
@@ -167,18 +178,18 @@ namespace ps4TCP {
         /// <summary>
         /// A string for our binary TCP dump file.
         /// </summary>
-        private string binFile = recvDir + "portdump.bin";
+        private static string binFile = recvDir + "portdump.bin";
 
         /// <summary>
         /// An output buffer. We use that to store some strings to the beginn of the initialization process till we can write into the log. That we we can write into the console-
         /// and the the log file to same time with one function.
         /// </summary>
-        private string outbuff = string.Empty;
+        private static string outbuff = string.Empty;
 
         /// <summary>
         /// Resolve the applications run time path and generate a string, based on that path, for the logger with included and trimmed date and time.
         /// </summary>
-        public string useLog = string.Empty;
+        public static string useLog = string.Empty;
 
         /// <summary>
         /// String variable for the foreground string.
@@ -228,12 +239,12 @@ namespace ps4TCP {
         /// <summary>
         /// Add a string to our output, make it nice.
         /// </summary>
-        private string PC = "[PC]:";
+        private static string PC = "[PC]:";
 
         /// <summary>
         /// Add a string to our output, make it nice.
         /// </summary>
-        private string PCE = "[PC][ERROR]:";
+        private static string PCE = "[PC][ERROR]:";
 
         /// <summary>
         /// A test string which we will encode with the client's format encoding.
@@ -298,7 +309,7 @@ namespace ps4TCP {
         /// <summary>
         /// Define a Socket Name to use.
         /// </summary>
-        public string sockName;
+        public static string sockName;
 
         /// <summary>
         /// Temporary store the ip string.
@@ -323,7 +334,53 @@ namespace ps4TCP {
             this.rtb = rtb;
             this.control = control;
             rtb.SetControl(control);
+            OnWriteLineEvent += WriteLineEvent;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rtb"></param>
+        /// <param name="control"></param>
+        /// <param name="_log"></param>
+        /// <param name="_binData"></param>
+        /// <param name="nCM"></param>
+        /// <param name="form"></param>
+        /// <param name="ec"></param>
+        /// <param name="sc"></param>
+        /// <param name="pc"></param>
+        /// <param name="sn"></param>
+        /// <param name="bc"></param>
+        /// <param name="fc"></param>
+        public PS4TCP(RichTextBox rtb, Control control, bool _log, bool _binData, bool nCM, bool form, string ec, string sc, string pc, string sn, string bc, string fc) {
+            this.rtb = rtb;
+            this.control = control;
+            log = _log;
+            binData = _binData;
+            noConnectMsg = nCM;
+            formatting = form;
+            errCol = ec;
+            sockCol = sc;
+            pcCol = pc;
+            sockName = sn;
+            backCol = bc;
+            foreCol = fc;
+            rtb.SetControl(control);
+            OnWriteLineEvent += WriteLineEvent;
+        }
+
+        /// <summary>
+        /// Fire a new OnWriteLineEvent Event.
+        /// </summary>
+        /// <param name="args">The Event Arguments.</param>
+        public static void FireOnWriteLineEvent(AppEventArgs args) { OnWriteLineEvent?.Invoke(null, args); }
+
+        /// <summary>
+        /// Write a Line into the Gui.
+        /// </summary>
+        /// <param name="sender">The Sender.</param>
+        /// <param name="args">The Event Arguments.</param>
+        private void WriteLineEvent(object sender, AppEventArgs args) { WriteLine(args.Message); }
 
         /// <summary>
         /// Exit from the Gui instance.
@@ -339,27 +396,7 @@ namespace ps4TCP {
                 server.Stop();               
             }
         }
-
-        /// <summary>
-        /// The Count Thread. Will count a second then subtract 1 from the counter and alter the console output.
-        /// </summary>
-        private void Count() {
-            int toAlter;
-            toAlter = rtb.CursorTop() - 2;
-            int cursorLeft;                                                              // Set up two integers to store the cursor position for backup reasons.
-            cursorLeft = cursorTop = 0;                                                             // Initialize them to 0.
-            for (int i = 0; i < COUNT; i++) {                                                       // Loop now for 10 seconds.
-                Thread.Sleep(1000);                                                                 // Thread wait for a second.
-                COUNT--;                                                                            // Count 1 down.
-                cursorLeft = rtb.CursorLeft();
-                rtb.SetSelectionStart(rtb.GetFirstCharIndexFromLin(toAlter) + 45);             // Set Cursor to the position to alter.
-                Write(COUNT.ToString());                                                    // Write out the new value.
-                rtb.SetSelectionStart(cursorLeft);                                                    // Reset previous backed up Cursor Position and Line.
-            }
-            if (log) Logger.WriteLine(useLog, false, noInput);                                      // Write information into the logger.
-            rtb.WriteLine("y");
-        }        
-        
+                
         /// <summary>
         /// Create a test file in the folder '\test\' of the server's run time root directory.
         /// </summary>
@@ -458,15 +495,20 @@ namespace ps4TCP {
         /// <param name="format">The format to check.</param>
         /// <returns>The formatted string, if any.</returns>
         private string CheckFormat(string format) {
-            if (!formatting) format = format.Replace("[PS4]:", "").Replace("[PC]:", "");
-            else {
-                if (format.Contains("[PC]:")) {
-                    WritePCString();
-                    format = format.Replace("[PC]:", "");
-                } else if (format.Contains("[PC][ERROR]:")) {
-                    WriteErrorString();
-                    rtb.WriteColor(format.Replace("[PC][ERROR]:", ""), Color.FromName(errCol));
-                } else WriteSockString();
+            if (format != string.Empty) {
+                if (!formatting) format = format.Replace("[PS4]:", "").Replace("[PC]:", "");
+                else {
+                    if (format.Contains("[PC]:")) {
+                        WritePCString();
+                        format = format.Replace("[PC]:", " ");
+                    } else if (format.Contains("[PC][ERROR]:")) {
+                        WriteErrorString();
+                        rtb.WriteColor(format.Replace("[PC][ERROR]:", " "), Color.FromName(errCol));
+                    } else {
+                        WriteSockString();
+                        // fix double write
+                    }
+                }
             }
             return format;
         }
@@ -529,7 +571,7 @@ namespace ps4TCP {
         private void WriteSockString() {
             rtb.WriteColor("[", Color.FromName(foreCol));
             rtb.WriteColor(sockName, Color.FromName(sockCol));
-            rtb.WriteColor("]: ", Color.FromName(foreCol));
+            rtb.WriteColor("]:", Color.FromName(foreCol));
         }
 
         /// <summary>
@@ -538,7 +580,7 @@ namespace ps4TCP {
         private void WritePCString() {
             rtb.WriteColor("[", Color.FromName(foreCol));
             rtb.WriteColor("PC", Color.FromName(pcCol));
-            rtb.WriteColor("]: ", Color.FromName(foreCol));
+            rtb.WriteColor("]:", Color.FromName(foreCol));
         }
 
         /// <summary>
@@ -549,7 +591,7 @@ namespace ps4TCP {
             rtb.WriteColor("PC", Color.FromName(pcCol));
             rtb.WriteColor("][", Color.FromName(foreCol));
             rtb.WriteColor("ERROR", Color.FromName(errCol));
-            rtb.WriteColor("]: ", Color.FromName(foreCol));
+            rtb.WriteColor("]:", Color.FromName(foreCol));
         }
 
         /// <summary>
@@ -758,7 +800,8 @@ namespace ps4TCP {
         private string ResolveColorForInlineWrite(string data) {
             string[] splitted = data.Split(' ');
             string replace = splitted[0] + " ";
-            if (Enum.TryParse(splitted[0].Replace("COLOR ", ""), out KnownColor parse)) rtb.SetSelectionColor(Color.FromKnownColor(parse));
+            KnownColor parse;
+            if (Enum.TryParse(splitted[0].Replace("COLOR ", ""), out parse)) rtb.SetSelectionColor(Color.FromKnownColor(parse));
             return data.Replace(replace, "");
         }
 
@@ -843,11 +886,7 @@ namespace ps4TCP {
 
                     Write("Done !\n");                                                         // Inform user.
                     WriteLine("{0}Sended " + fileDat.Length.ToString() + " bytes out to the client.", PC);
-                } else {
-                    stream.Write(start, 0, start.Length);                                      // Sending the start trigger.
-                    stream.Write(new byte[0], 0, 1);                                           // Now a dummy aka single byte.
-                    stream.Write(stop, 0, stop.Length);                                        // And tell the client that we are done.
-                }
+                } else stream.Write(stop, 0, stop.Length);                                     // And tell the client that we are done.
             }
         }
 
@@ -884,7 +923,27 @@ namespace ps4TCP {
                 WriteLine("{0}Got " + received.Size.ToString() + "bytes of sweatness.", PC);
             }
         }
-        
+
+        /// <summary>
+        /// The Count Thread. Will count a second then subtract 1 from the counter and alter the console output.
+        /// </summary>
+        private void Count() {
+            int toAlter;
+            toAlter = rtb.CursorTop() - 2;
+            int cursorLeft;                                                              // Set up two integers to store the cursor position for backup reasons.
+            cursorLeft = cursorTop = 0;                                                  // Initialize them to 0.
+            for (int i = 0; i < COUNT; i++) {                                            // Loop now for 10 seconds.
+                Thread.Sleep(1000);                                                      // Thread wait for a second.
+                COUNT--;                                                                 // Count 1 down.
+                cursorLeft = rtb.CursorLeft();
+                rtb.SetSelectionStart(rtb.GetFirstCharIndexFromLin(toAlter) + 45);       // Set Cursor to the position to alter.
+                Write(COUNT.ToString());                                                 // Write out the new value.
+                rtb.SetSelectionStart(cursorLeft);                                       // Reset previous backed up Cursor Position and Line.
+            }
+            if (log) Logger.WriteLine(useLog, false, noInput);                           // Write information into the logger.
+            rtb.WriteLine("y");
+        }
+
         /// <summary>
         /// Ask user for reconnect.
         /// </summary>
@@ -970,7 +1029,8 @@ namespace ps4TCP {
                     if (useServer) client = server.AcceptTcpClient();                                               // Perform a blocking call to accept requests.
                     else client = new TcpClient(tempIP, PORT);
 
-                    if (!noConnectMsg) rtb.SetSelectedText("Connected!");                                         // Again if that's a normal session, write out.
+                    if (!noConnectMsg) rtb.SetSelectedText("Connected!");                                           // Again if that's a normal session, write out.
+                    WriteLine("");                                                                                  // Jump into the next line.
                     Gui.connected = true;                                                                           // If this is a GUI instance, set the connected var.
 
                     int i;
@@ -995,7 +1055,7 @@ namespace ps4TCP {
                             else if (data.Contain("COLOR")) WriteColor(data);                                       // Write Colorized output.
                             else if (data.Contain("FORMATOFF")) formatting = false;                                 // Turn formatting off.
                             else if (data.Contain("FORMATON")) formatting = true;                                   // Turn formatting on.
-                            else ConnectionWrite(data, bytes, i);                                                        // Else write out text (and bin).
+                            else ConnectionWrite(data, bytes, i);                                                   // Else write out text (and bin).
                         }
                         if (exit) break;                                                                            // Gui requested to kill the process ?
                     }

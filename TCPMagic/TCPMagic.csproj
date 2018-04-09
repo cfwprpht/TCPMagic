@@ -60,7 +60,7 @@
       <DependentUpon>tcpmagic.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="tcpHandler.cs" />
+    <Compile Include="ps4tcp.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="tcpmagic.resx">
       <DependentUpon>tcpmagic.cs</DependentUpon>

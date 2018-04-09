@@ -24,7 +24,7 @@
         /// </summary>
         private void InitializeComponent() {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TCPMagic));
-            this.rtb = new System.Windows.Forms.RichTextBox();
+            rtb = new System.Windows.Forms.RichTextBox();
             this.labelPort = new System.Windows.Forms.Label();
             this.labelIP = new System.Windows.Forms.Label();
             this.comboIP = new System.Windows.Forms.ComboBox();
@@ -59,16 +59,16 @@
             // 
             // rtb
             // 
-            this.rtb.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            rtb.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.rtb.BackColor = System.Drawing.SystemColors.WindowText;
-            this.rtb.Font = new System.Drawing.Font("Century Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rtb.ForeColor = System.Drawing.Color.Yellow;
-            this.rtb.Location = new System.Drawing.Point(1, 77);
-            this.rtb.Name = "rtb";
-            this.rtb.Size = new System.Drawing.Size(864, 613);
-            this.rtb.TabIndex = 0;
+            rtb.BackColor = System.Drawing.SystemColors.WindowText;
+            rtb.Font = new System.Drawing.Font("Century Gothic", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            rtb.ForeColor = System.Drawing.Color.Yellow;
+            rtb.Location = new System.Drawing.Point(1, 77);
+            rtb.Name = "rtb";
+            rtb.Size = new System.Drawing.Size(864, 613);
+            rtb.TabIndex = 0;
             this.rtb.Text = "";
             this.rtb.ReadOnlyChanged += new System.EventHandler(this.Rtb_ReadOnlyChanged);
             this.rtb.TextChanged += new System.EventHandler(this.Rtb_TextChanged);

@@ -49,12 +49,12 @@ namespace TCPMagic {
         /// <summary>
         /// Represents the RichTextBox Background Color.
         /// </summary>
-        public static Color backCol;
+        public static Color backCol = Color.Black;
 
         /// <summary>
         /// Represents the RichTextBox Foreground Color.
         /// </summary>
-        public static Color foreCol;
+        public static Color foreCol = Color.Yellow;
 
         /// <summary>
         /// Represents the RichTextBox Error Color.
@@ -240,20 +240,10 @@ namespace TCPMagic {
                     // Set args, initialize a clean new instance and run the client in a thread.
                     SetArgs();
                     args[3] = "client";
-                    ps4TCP = new PS4TCP(rtb, this) {
-                        log = logMenuItem.Checked,
-                        binData = save2BinMenuItem.Checked,
-                        noConnectMsg = noCMsgMenuItem.Checked,
-                        backCol = backCol.GetName(),
-                        foreCol = foreCol.GetName(),
-                        errCol = errCol.GetName(),
-                        sockCol = sockCol.GetName(),
-                        pcCol = pcCol.GetName(),
-                        formatting = formatMenuItem.Checked,
-                        sockName = socketName
-                    };
+                    ps4TCP = new PS4TCP(rtb, this, logMenuItem.Checked, save2BinMenuItem.Checked, noCMsgMenuItem.Checked, formatMenuItem.Checked, errCol.GetName(), sockCol.GetName(),
+                                        pcCol.GetName(), socketName, backCol.GetName(), foreCol.GetName());
 
-                    // Run The socket i na Thread and activate certain Menu Items.
+                    // Run The socket in a Thread and activate certain Menu Items.
                     RunSocketThread();
                     rtb.ContextMenu.MenuItems[7].Enabled = killMenuItem.Enabled = true;
 
@@ -270,29 +260,20 @@ namespace TCPMagic {
                     EnableGui();
                     return;
                 } catch (Exception ex) { MessagBox.Error("An Error Ocured !\n\n" + ex.ToString()); return; }
+            } else {
+                // Run Server or Client.
+                try {
+                    SetArgs();
+                    if (checkServer.Checked) args[3] = "server";
+                    else args[3] = "client";
+                    ps4TCP = new PS4TCP(rtb, this, logMenuItem.Checked, save2BinMenuItem.Checked, noCMsgMenuItem.Checked, formatMenuItem.Checked, errCol.GetName(), sockCol.GetName(),
+                                        pcCol.GetName(), socketName, backCol.GetName(), foreCol.GetName());
+
+                    RunSocketThread();
+                    rtb.ContextMenu.MenuItems[7].Enabled = killMenuItem.Enabled = true;
+                }
+                catch (Exception ex) { MessagBox.Error("An Error Ocured !\n\n" + ex.ToString()); }
             }
-
-            // Run Server or Client.
-            try {
-                SetArgs();
-                if (checkServer.Checked) args[3] = "server";
-                else args[3] = "client";
-                ps4TCP = new PS4TCP(rtb, this) {
-                    log = logMenuItem.Checked,
-                    binData = save2BinMenuItem.Checked,
-                    noConnectMsg = noCMsgMenuItem.Checked,
-                    backCol = backCol.GetName(),
-                    foreCol = foreCol.GetName(),
-                    errCol = errCol.GetName(),
-                    sockCol = sockCol.GetName(),
-                    pcCol = pcCol.GetName(),
-                    formatting = formatMenuItem.Checked,
-                    sockName = socketName
-                };
-
-                RunSocketThread();
-                rtb.ContextMenu.MenuItems[7].Enabled = killMenuItem.Enabled = true;
-            } catch (Exception ex) { MessagBox.Error("An Error Ocured !\n\n" + ex.ToString()); }
         }
 
         /// <summary>
@@ -386,6 +367,8 @@ namespace TCPMagic {
                 if (!rtb.ReadOnly) rtb.ContextMenu.MenuItems[6].Enabled = true;
                 else rtb.ContextMenu.MenuItems[6].Enabled = false;
                 rtb.ContextMenu.MenuItems[0].Enabled = true;
+                rtb.SelectionStart = rtb.Text.Length;
+                rtb.ScrollToCaret();
             } else rtb.ContextMenu.MenuItems[0].Enabled = rtb.ContextMenu.MenuItems[6].Enabled = false;
         }
 
@@ -695,6 +678,8 @@ namespace TCPMagic {
             if (socketThread != null && socketThread.IsAlive) socketThread.Abort();
 
             buttonRun.Text = "Run";
+            PS4TCP.FireOnWriteLineEvent(new AppEventArgs(""));
+            PS4TCP.FireOnWriteLineEvent(new AppEventArgs("[PC]: Process Killed."));
             EnableGui();
             rtb.ContextMenu.MenuItems[7].Enabled = killMenuItem.Enabled = false;
         }
@@ -875,7 +860,8 @@ namespace TCPMagic {
         private void SetArgs() {
             args = new string[4];
             args[0] = "-i" + comboIP.SelectedItem.ToString();
-            args[1] = "-p" + comboPort.SelectedItem.ToString();
+            if (comboPort.SelectedItem.ToString() != string.Empty) args[1] = "-p" + comboPort.SelectedItem.ToString();
+            else args[1] = "-p" + comboPort.SelectedText;
             args[2] = comboEncoding.SelectedItem.ToString();
         }
 
@@ -895,7 +881,8 @@ namespace TCPMagic {
         private bool CheckIP() {
             bool res = false;
             if (comboIP.Text.Length > 0) {
-                if (!IPAddress.TryParse(comboIP.Text, out IPAddress result)) MessagBox.Error("This is not a valid IP Address !");
+                IPAddress result;
+                if (!IPAddress.TryParse(comboIP.Text, out result)) MessagBox.Error("This is not a valid IP Address !");
                 else {
                     if (!checkServer.Checked && !settings.ClientIPs.Contains(comboIP.Text)) {
                         settings.ClientIPs.Add(comboIP.Text);
@@ -914,8 +901,9 @@ namespace TCPMagic {
         /// <returns>True if string is in Port format and in a valid range, else false.</returns>
         private bool CheckPort() {
             bool res = false;
+            ushort result;
             if (comboPort.Text.Length > 0) {
-                if (!Port.TryParse(comboPort.Text, out ushort result)) MessagBox.Error("This is not a valid Port Number !");
+                if (!Port.TryParse(comboPort.Text, out result)) MessagBox.Error("This is not a valid Port Number !");
                 else {
                     if (!settings.Ports.Contains(comboPort.Text)) {
                         settings.Ports.Add(comboPort.Text);
